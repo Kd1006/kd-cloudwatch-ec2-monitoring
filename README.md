@@ -1,115 +1,131 @@
-# kd-cloudwatch-ec2-monitoring
-EC2 + Cloudwatch + SNS monitoring project : Create alarms, trigger CPU spike and receive email alerts.  
+EC2 Web Server + CloudWatch Monitoring (Project 4)
 
-This project demonstrates how to set up basic monitoring on an Amazon EC2 instance using Amazon CloudWatch, SNS notifications, and a simple CPU-load simulation.
-The goal is to show how an engineer can create operational visibility and receive automated alerts when an instance becomes unhealthy or overloaded.
+This project walks through deploying a simple Apache web server on an Amazon Linux EC2 instance, serving a custom webpage, and setting up CloudWatch monitoring with SNS email alerts.
+It reflects real cloud support tasks: launching instances, configuring servers, enabling networking, and diagnosing issues through metrics and alerts.
 
-## What the Project Covers
+What I Built
 
-Launching an EC2 instance (Amazon Linux 2023)
+A working EC2 instance in us-east-2 (Ohio)
 
-Installing and configuring Apache HTTP Server
+Installed and configured Apache (httpd)
 
-Serving a test webpage from the instance
+Served a custom HTML page on port 80
 
-Creating a CloudWatch alarm to monitor CPU utilization
+Set inbound rules for HTTP access
 
-Setting up an SNS topic + email subscription for alerts
+Added CloudWatch + SNS monitoring to alert me when CPU gets high
 
-Triggering the alarm manually by generating high CPU load
+Verified alarm trigger + recovery
 
-Observing alarm state changes (OK → ALARM → OK)
+This project demonstrates real AWS operational skills: Linux commands, networking, monitoring, and debugging.
 
-This is a practical, hands-on workflow often used in cloud operations and DevOps roles.
+Technologies Used
 
----
+Amazon EC2
 
-## EC2 Instance Setup
+Amazon Linux 2023
 
-OS: Amazon Linux 2023
+Apache Web Server (httpd)
 
-Web server: Apache (httpd)
+Security Groups
 
-Created a simple HTML file at /var/www/html/index.html:
+SSH
 
-<h1>Hello from KD’s EC2 Web Server 🎉</h1>
-<p>This page is served from an Amazon Linux EC2 instance in us-east-2.</p>
+CloudWatch Alarms
+
+SNS Notifications
+
+Steps
+1. Launch EC2 Instance
+
+AMI: Amazon Linux 2023
+
+Instance type: t2.micro (Free Tier)
+
+Key pair: kd-ec2-keypair
+
+Security group allowing SSH (22) and HTTP (80)
+
+📸 Screenshots
+
+2. Connect via SSH
+
+Used my key pair to connect from macOS Terminal:
+
+ssh -i ~/.ssh/kd-ec2-keypair.pem ec2-user@<Public-IP>
+
+📸 Screenshot
+
+3. Install Apache
+
+Updated the instance and installed + enabled Apache:
+
+sudo dnf update -y
+sudo dnf install httpd -y
+sudo systemctl start httpd
+sudo systemctl enable httpd
+
+📸 Screenshot
+
+4. Allow HTTP in Security Group
+
+Inbound rule added:
+
+Type	Port	Source
+HTTP	80	0.0.0.0/0
+📸 Screenshot
+
+5. Serve Custom Webpage
+
+Replaced the default Apache page with my own:
+
+echo "<h1>Hello from KD's EC2 Web Server 🎉</h1>" | sudo tee /var/www/html/index.html
 
 
-This allowed verifying that the instance was publicly reachable and serving traffic correctly.
+Visited the Public IP to verify.
 
-## CloudWatch Alarm
+📸 Screenshot
 
-I created a CloudWatch alarm to monitor CPUUtilization for the EC2 instance.
+Monitoring Extension (CloudWatch + SNS)
+6. SNS Topic for Alerts
 
-Alarm settings:
+Created a topic called kd-ec2-alerts and subscribed my email.
+
+📸 Screenshots
+
+
+
+
+7. Create CloudWatch Alarm
+
+Configured alarm:
 
 Metric: CPUUtilization
 
 Threshold: > 60%
 
-Period: 5 minutes
+Notification: kd-ec2-alerts SNS topic
 
-Whenever the value is Greater than the threshold
+📸 Screenshot
 
-When the alarm enters ALARM state, it triggers an SNS notification.
+8. Trigger Alarm
 
---- 
+Installed stress and simulated high CPU:
 
-### SNS Setup
+sudo yum install stress -y
+stress --cpu 2
 
-Created an SNS Topic:
 
-Name: kd-ec2-alerts
-Subscription: My email address
-Once confirmed, the alarm successfully delivered alert messages when CPU spiked.
+Alarm entered ALARM (red) and I received an SNS email.
 
---- 
+📸 Screenshot
 
-### Triggering the Alarm
+Cleanup
 
-To test the alarm, I intentionally generated high CPU load:
-```bash
-yes > /dev/null &
-```
+To avoid charges:
 
-This pushed CPU usage above the threshold and caused the alarm to enter ALARM state.
-After terminating the process:
-```bash 
-killall yes
-```
+Stop/terminate EC2 instance
 
-CPU returned to normal and the alarm moved back to OK state.
+Delete CloudWatch alarm
 
-## Screenshots Included
-
-The repository contains the following:
-![EC2 instance created](screenshots/01-ec2-instance-created.png)
-
-02-sns-topic-created.png
-
-03-sns-email-confirmation.png
-
-04-cloudwatch-alarm-created.png
-
-05-cloudwatch-alarm-in-alarm-state.png
-
-06-email-alert-received.png
-
-07-alarm-history-recovery.png
-
-These demonstrate the setup, the alarm firing, and the recovery process.
-
-## What This Project Shows
-
-### This project highlights:
-
-Basic AWS monitoring principles
-
-How to integrate CloudWatch + SNS for automated alerting
-
-How to validate monitoring using CPU load tests
-
-Cloud engineering fundamentals used in real production systems
-
-It’s a great foundational example of operational visibility in AWS.
+Delete SNS topic (optional)

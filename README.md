@@ -133,7 +133,7 @@ CloudWatch Alarm created
 ![EC2 instance](screenshots/08-cloudwatch-alarm-created.png)
 
 Triggering the Alarm 
-![EC2 instance](screenshots/09-alarm-in-alarm-state (RED).png
+![EC2 instance](screenshots/09-alarm-in-alarm-state.png
 
 Email Alert Received
 ![EC2 instance](screenshots/10-email-alert-received.png)

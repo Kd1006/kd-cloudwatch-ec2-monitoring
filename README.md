@@ -1,131 +1,145 @@
-EC2 Web Server + CloudWatch Monitoring (Project 4)
+## AWS EC2 Web Server Deployment + Troubleshooting (Project 4)
 
-This project walks through deploying a simple Apache web server on an Amazon Linux EC2 instance, serving a custom webpage, and setting up CloudWatch monitoring with SNS email alerts.
-It reflects real cloud support tasks: launching instances, configuring servers, enabling networking, and diagnosing issues through metrics and alerts.
+This project walks through launching an EC2 instance, installing Apache, hosting a webpage, intentionally breaking the server, diagnosing the outage, and restoring the service.
+It reflects real Cloud Support / Cloud Engineer work involving EC2, Linux, Apache, logs, systemctl, and troubleshooting.
 
-What I Built
+### Tech Stack
 
-A working EC2 instance in us-east-2 (Ohio)
+- AWS EC2 (Amazon Linux 2023)
 
-Installed and configured Apache (httpd)
+- Apache HTTP Server
 
-Served a custom HTML page on port 80
+- Linux systemd (systemctl)
 
-Set inbound rules for HTTP access
+- SSH (macOS Terminal)
 
-Added CloudWatch + SNS monitoring to alert me when CPU gets high
+- AWS Security Groups (SSH + HTTP)
 
-Verified alarm trigger + recovery
+###  What I Did
+#### 1. Launched a Web Server
 
-This project demonstrates real AWS operational skills: Linux commands, networking, monitoring, and debugging.
+Created an EC2 instance (Amazon Linux 2023, t2.micro).
 
-Technologies Used
-
-Amazon EC2
-
-Amazon Linux 2023
-
-Apache Web Server (httpd)
-
-Security Groups
-
-SSH
-
-CloudWatch Alarms
-
-SNS Notifications
-
-Steps
-1. Launch EC2 Instance
-
-AMI: Amazon Linux 2023
-
-Instance type: t2.micro (Free Tier)
-
-Key pair: kd-ec2-keypair
-
-Security group allowing SSH (22) and HTTP (80)
-
-📸 Screenshots
-
-2. Connect via SSH
-
-Used my key pair to connect from macOS Terminal:
-
-ssh -i ~/.ssh/kd-ec2-keypair.pem ec2-user@<Public-IP>
-
-📸 Screenshot
-
-3. Install Apache
-
-Updated the instance and installed + enabled Apache:
+Connected using SSH and installed Apache.
 
 sudo dnf update -y
 sudo dnf install httpd -y
 sudo systemctl start httpd
 sudo systemctl enable httpd
-
-📸 Screenshot
-
-4. Allow HTTP in Security Group
-
-Inbound rule added:
-
-Type	Port	Source
-HTTP	80	0.0.0.0/0
-📸 Screenshot
-
-5. Serve Custom Webpage
-
-Replaced the default Apache page with my own:
-
-echo "<h1>Hello from KD's EC2 Web Server 🎉</h1>" | sudo tee /var/www/html/index.html
+echo "<h1>Hello from KD's Cloud Server 🚀</h1>" | sudo tee /var/www/html/index.html
 
 
-Visited the Public IP to verify.
+Verified the webpage in the browser using the EC2 Public IP.
 
-📸 Screenshot
+#### 2. Simulated a Service Outage
 
-Monitoring Extension (CloudWatch + SNS)
-6. SNS Topic for Alerts
+To replicate a real production issue, I manually stopped Apache:
+```bash
 
-Created a topic called kd-ec2-alerts and subscribed my email.
+sudo systemctl stop httpd
+```
 
-📸 Screenshots
+The website became unreachable — exactly as expected.
+
+--- 
+
+#### 3. Diagnosed the Issue
+
+Checked Apache status:
+```bash
+sudo systemctl status httpd
+```
+--- 
+
+Reviewed recent error logs:
+```bash 
+
+sudo tail -n 20 /var/log/httpd/error_log
+```
+--- 
+#### 4. Restored the Service 
+
+Restarted Apache and ensured it starts automatically on reboot:
+```bash 
+
+sudo systemctl start httpd
+sudo systemctl enable httpd
+```
+
+Confirmed the website was working again.
+
+### Root Cause Analysis (RCA)
+
+Cause: The Apache (httpd) service was intentionally stopped.
+
+Effect: EC2 instance remained healthy, but the web server stopped responding.
+
+Fix: Restarted Apache service.
+
+Prevention:
+
+CloudWatch alarms
+
+Auto-healing configuration
+
+Systemd restart rules
+
+---
+### Summary
+
+This project demonstrates real-world cloud support skills including:
+
+Deploying and configuring Linux web servers
+
+Managing and debugging services
+
+Using logs and systemctl for diagnosis
+
+Understanding how EC2 + Apache + security groups work together
+
+It reflects the day-to-day responsibilities of Cloud Support Engineers, DevOps Engineers, and Solutions Architects.
+
+**Screebshots:** 
+
+Below are all 11 screenshots for this project — grouped by stage.
+
+## EC2 Instance & Networking
+![EC2 instance](screenshots/01-ec2-instance-launched.png)
+
+## Install & Configure Web Server (Apache)
+
+![EC2 instance](screenshots/02-ssh-connection-success.png)
+
+Apache Installed 
+
+![EC2 instance](screenshots/03-apache-installed.png) 
+
+Securiry Group Updated 
+
+![EC2 instance](screenshots/04-security-group-http-enabled.png)
+
+Apache Test Page Visible
+![EC2 instance](screenshots/05-apache-test-page.png)
+
+## SNS Notification Setup 
+SNS Topic Created 
+![EC2 instance](screenshots/06-sns-topic-created.png)
+
+SNS Subscription Confirmed
+![EC2 instance](screenshots/07-sns-subscription-confirmed.png)
+
+## CLoudWatch Alarm Creation
+CloudWatch Alarm created 
+![EC2 instance](screenshots/08-cloudwatch-alarm-created.png)
+
+Triggering the Alarm 
+![EC2 instance](screenshots/09-alarm-in-alarm-state (RED).png
+
+Email Alert Received
+![EC2 instance](screenshots/10-email-alert-received.png)
+
+Alarm Recovery 
+![EC2 instance](screenshots/11-alarm-recovery.png)
 
 
 
-
-7. Create CloudWatch Alarm
-
-Configured alarm:
-
-Metric: CPUUtilization
-
-Threshold: > 60%
-
-Notification: kd-ec2-alerts SNS topic
-
-📸 Screenshot
-
-8. Trigger Alarm
-
-Installed stress and simulated high CPU:
-
-sudo yum install stress -y
-stress --cpu 2
-
-
-Alarm entered ALARM (red) and I received an SNS email.
-
-📸 Screenshot
-
-Cleanup
-
-To avoid charges:
-
-Stop/terminate EC2 instance
-
-Delete CloudWatch alarm
-
-Delete SNS topic (optional)
